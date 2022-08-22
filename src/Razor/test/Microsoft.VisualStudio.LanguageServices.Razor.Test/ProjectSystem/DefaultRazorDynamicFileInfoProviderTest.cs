@@ -7,6 +7,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Razor.Language;
+using Microsoft.AspNetCore.Razor.LanguageServer;
 using Microsoft.CodeAnalysis.Razor;
 using Microsoft.CodeAnalysis.Razor.ProjectSystem;
 using Microsoft.CodeAnalysis.Razor.Workspaces;
@@ -37,7 +38,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Razor.ProjectSystem
             Document1 = (DefaultDocumentSnapshot)Project.GetDocument(hostDocument1.FilePath);
             Document2 = (DefaultDocumentSnapshot)Project.GetDocument(hostDocument2.FilePath);
 
-            Provider = new DefaultRazorDynamicFileInfoProvider(DocumentServiceFactory, EditorFeatureDetector);
+            Provider = new DefaultRazorDynamicFileInfoProvider(DocumentServiceFactory, EditorFeatureDetector, TestLanguageServerFeatureOptions.Instance);
             TestAccessor = Provider.GetTestAccessor();
             Provider.Initialize(ProjectSnapshotManager);
 
@@ -105,44 +106,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Razor.ProjectSystem
 
             // Assert
             Assert.False(called);
-        }
-
-        [Fact]
-        public async Task UpdateLSPFileInfo_DocumentRemoved_Noops()
-        {
-            // Arrange
-            await TestAccessor.GetDynamicFileInfoAsync(Project.FilePath, Document1.FilePath, CancellationToken.None).ConfigureAwait(false);
-            var called = false;
-            Provider.Updated += (sender, args) => called = true;
-            ProjectSnapshotManager.DocumentRemoved(Project.HostProject, Document1.State.HostDocument);
-
-            // Act
-            Provider.UpdateLSPFileInfo(new Uri(Document1.FilePath), LSPDocumentContainer);
-
-            // Assert
-            Assert.False(called);
-        }
-
-        [Fact]
-        public async Task UpdateLSPFileInfo_UnrelatedDocumentRemoved_UpdateOnlyValidDocuments()
-        {
-            // Arrange
-            await TestAccessor.GetDynamicFileInfoAsync(Project.FilePath, Document1.FilePath, CancellationToken.None).ConfigureAwait(false);
-            await TestAccessor.GetDynamicFileInfoAsync(Project.FilePath, Document2.FilePath, CancellationToken.None).ConfigureAwait(false);
-            var callCount = 0;
-            Provider.Updated += (sender, documentFilePath) =>
-            {
-                Assert.Equal(Document1.FilePath, documentFilePath);
-                callCount++;
-            };
-            ProjectSnapshotManager.DocumentRemoved(Project.HostProject, Document2.State.HostDocument);
-
-            // Act
-            Provider.UpdateLSPFileInfo(new Uri(Document2.FilePath), LSPDocumentContainer);
-            Provider.UpdateLSPFileInfo(new Uri(Document1.FilePath), LSPDocumentContainer);
-
-            // Assert
-            Assert.Equal(1, callCount);
         }
 
         [Fact]

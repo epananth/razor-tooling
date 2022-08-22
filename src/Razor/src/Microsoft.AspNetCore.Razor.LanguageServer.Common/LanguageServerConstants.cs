@@ -37,32 +37,7 @@ namespace Microsoft.AspNetCore.Razor.LanguageServer.Common
 
         public const string RazorCompletionResolveEndpointName = "razor/completionItem/resolve";
 
-        // RZLS Custom Message Targets
-        public const string RazorUpdateCSharpBufferEndpoint = "razor/updateCSharpBuffer";
-
-        public const string RazorUpdateHtmlBufferEndpoint = "razor/updateHtmlBuffer";
-
-        public const string RazorRangeFormattingEndpoint = "razor/rangeFormatting";
-
-        public const string RazorProvideCodeActionsEndpoint = "razor/provideCodeActions";
-
-        public const string RazorResolveCodeActionsEndpoint = "razor/resolveCodeActions";
-
-        public const string RazorProvideSemanticTokensRangeEndpoint = "razor/provideSemanticTokensRange";
-
-        public const string RazorProvideHtmlDocumentColorEndpoint = "razor/provideHtmlDocumentColor";
-
-        public const string RazorServerReadyEndpoint = "razor/serverReady";
-
-        public const string RazorInlineCompletionEndpoint = "razor/inlineCompletion";
-
-        public const string RazorFoldingRangeEndpoint = "razor/foldingRange";
-
-        public const string RazorSemanticTokensRefreshEndpoint = "razor/semanticTokensRefresh";
-
-        public const string RazorTextPresentationEndpoint = "razor/textPresentation";
-
-        public const string RazorUriPresentationEndpoint = "razor/uriPresentation";
+        public const string RazorGetFormattingOptionsEndpointName = "razor/formatting/options";
 
         // This needs to be the same as in Web Tools, that is used by the HTML editor, because
         // we actually respond to the Web Tools "Wrap With Div" command handler, which sends this message

@@ -29,11 +29,13 @@ namespace Microsoft.VisualStudio.Editor.Razor
         // In VS we override the project configuration file name because we don't want our serialized state to clash with other platforms (VSCode)
         public override string ProjectConfigurationFileName => "project.razor.vs.json";
 
-        public override string CSharpVirtualDocumentSuffix => ".g.cs";
+        public override string CSharpVirtualDocumentSuffix => ".ide.g.cs";
 
         public override string HtmlVirtualDocumentSuffix => "__virtual.html";
 
         public override bool SingleServerCompletionSupport => false;
+
+        public override bool SingleServerSupport => false;
 
         private bool IsCodespacesOrLiveshare => _lspEditorFeatureDetector.IsRemoteClient() || _lspEditorFeatureDetector.IsLiveShareHost();
 

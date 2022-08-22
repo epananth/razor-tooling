@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Razor.Language.IntegrationTests;
 using Microsoft.AspNetCore.Razor.LanguageServer.Common;
 using Microsoft.AspNetCore.Razor.LanguageServer.Extensions;
 using Microsoft.AspNetCore.Razor.LanguageServer.Protocol;
-using Microsoft.AspNetCore.Razor.LanguageServer.Test;
+using Microsoft.AspNetCore.Razor.LanguageServer.Test.Common;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Razor;
 using Microsoft.CodeAnalysis.Razor.ProjectSystem;
@@ -94,7 +94,7 @@ namespace Microsoft.AspNetCore.Razor.LanguageServer.Formatting
                 InsertSpaces = insertSpaces,
             };
 
-            var formattingService = CreateFormattingService(codeDocument);
+            var formattingService = TestRazorFormattingService.CreateWithFullSupport(codeDocument);
 
             // Act
             var edits = await formattingService.FormatAsync(uri, documentSnapshot, range, options, CancellationToken.None);
@@ -130,10 +130,10 @@ namespace Microsoft.AspNetCore.Razor.LanguageServer.Formatting
             var uri = new Uri(path);
             var (codeDocument, documentSnapshot) = CreateCodeDocumentAndSnapshot(razorSourceText, uri.AbsolutePath, fileKind: fileKind);
 
-            var mappingService = new DefaultRazorDocumentMappingService(LoggerFactory);
+            var mappingService = new DefaultRazorDocumentMappingService(TestLanguageServerFeatureOptions.Instance, new TestDocumentContextFactory(), LoggerFactory);
             var languageKind = mappingService.GetLanguageKind(codeDocument, positionAfterTrigger, rightAssociative: false);
 
-            var formattingService = CreateFormattingService(codeDocument);
+            var formattingService = TestRazorFormattingService.CreateWithFullSupport(codeDocument);
             var options = new FormattingOptions()
             {
                 TabSize = tabSize,
@@ -200,7 +200,7 @@ namespace Microsoft.AspNetCore.Razor.LanguageServer.Formatting
                 throw new InvalidOperationException("Could not map from Razor document to generated document");
             }
 
-            var formattingService = CreateFormattingService(codeDocument);
+            var formattingService = TestRazorFormattingService.CreateWithFullSupport(codeDocument);
             var options = new FormattingOptions()
             {
                 TabSize = tabSize,
@@ -227,28 +227,6 @@ namespace Microsoft.AspNetCore.Razor.LanguageServer.Formatting
                 },
                 NewText = newText,
             };
-
-        private RazorFormattingService CreateFormattingService(RazorCodeDocument codeDocument)
-        {
-            var mappingService = new DefaultRazorDocumentMappingService(LoggerFactory);
-
-            var dispatcher = new LSPProjectSnapshotManagerDispatcher(LoggerFactory);
-            var versionCache = new DefaultDocumentVersionCache(dispatcher);
-
-            var client = new FormattingLanguageServerClient();
-            client.AddCodeDocument(codeDocument);
-            var passes = new List<IFormattingPass>()
-            {
-                new HtmlFormattingPass(mappingService, FilePathNormalizer, client, versionCache, LoggerFactory),
-                new CSharpFormattingPass(mappingService, FilePathNormalizer, client, LoggerFactory),
-                new CSharpOnTypeFormattingPass(mappingService, FilePathNormalizer, client, LoggerFactory),
-                new RazorFormattingPass(mappingService, FilePathNormalizer, client, LoggerFactory),
-                new FormattingDiagnosticValidationPass(mappingService, FilePathNormalizer, client, LoggerFactory),
-                new FormattingContentValidationPass(mappingService, FilePathNormalizer, client, LoggerFactory),
-            };
-
-            return new DefaultRazorFormattingService(passes, LoggerFactory, TestAdhocWorkspaceFactory.Instance);
-        }
 
         private static SourceText ApplyEdits(SourceText source, TextEdit[] edits)
         {

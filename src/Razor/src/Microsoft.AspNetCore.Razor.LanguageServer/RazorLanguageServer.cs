@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Razor.LanguageServer.Debugging;
 using Microsoft.AspNetCore.Razor.LanguageServer.Definition;
 using Microsoft.AspNetCore.Razor.LanguageServer.Diagnostics;
 using Microsoft.AspNetCore.Razor.LanguageServer.DocumentColor;
+using Microsoft.AspNetCore.Razor.LanguageServer.DocumentHighlighting;
 using Microsoft.AspNetCore.Razor.LanguageServer.DocumentPresentation;
 using Microsoft.AspNetCore.Razor.LanguageServer.Extensions;
 using Microsoft.AspNetCore.Razor.LanguageServer.Folding;
@@ -29,6 +30,7 @@ using Microsoft.AspNetCore.Razor.LanguageServer.ProjectSystem;
 using Microsoft.AspNetCore.Razor.LanguageServer.Refactoring;
 using Microsoft.AspNetCore.Razor.LanguageServer.Semantic;
 using Microsoft.AspNetCore.Razor.LanguageServer.Serialization;
+using Microsoft.AspNetCore.Razor.LanguageServer.SignatureHelp;
 using Microsoft.AspNetCore.Razor.LanguageServer.Tooltip;
 using Microsoft.AspNetCore.Razor.LanguageServer.WrapWithTag;
 using Microsoft.CodeAnalysis.Razor;
@@ -159,6 +161,8 @@ namespace Microsoft.AspNetCore.Razor.LanguageServer
                     .WithHandler<FoldingRangeEndpoint>()
                     .WithHandler<TextDocumentTextPresentationEndpoint>()
                     .WithHandler<TextDocumentUriPresentationEndpoint>()
+                    .WithHandler<DocumentHighlightEndpoint>()
+                    .WithHandler<SignatureHelpEndpoint>()
                     .WithServices(services =>
                     {
                         featureOptions ??= new DefaultLanguageServerFeatureOptions();
@@ -196,9 +200,6 @@ namespace Microsoft.AspNetCore.Razor.LanguageServer
                         services.AddSingleton<DocumentVersionCache, DefaultDocumentVersionCache>();
                         services.AddSingleton<ProjectSnapshotChangeTrigger>((services) => services.GetRequiredService<DocumentVersionCache>());
 
-                        services.AddSingleton<GeneratedDocumentContainerStore, DefaultGeneratedDocumentContainerStore>();
-                        services.AddSingleton<ProjectSnapshotChangeTrigger>((services) => services.GetRequiredService<GeneratedDocumentContainerStore>());
-
                         services.AddSingleton<RemoteTextLoaderFactory, DefaultRemoteTextLoaderFactory>();
                         services.AddSingleton<ProjectResolver, DefaultProjectResolver>();
                         services.AddSingleton<DocumentResolver, DefaultDocumentResolver>();
@@ -230,9 +231,9 @@ namespace Microsoft.AspNetCore.Razor.LanguageServer
 
                         // Document processed listeners
                         services.AddSingleton<DocumentProcessedListener, RazorDiagnosticsPublisher>();
-                        services.AddSingleton<DocumentProcessedListener, UnsynchronizableContentDocumentProcessedListener>();
+                        services.AddSingleton<DocumentProcessedListener, GeneratedDocumentSynchronizer>();
+                        services.AddSingleton<DocumentProcessedListener, CodeDocumentReferenceHolder>();
 
-                        services.AddSingleton<HostDocumentFactory, DefaultHostDocumentFactory>();
                         services.AddSingleton<ProjectSnapshotManagerAccessor, DefaultProjectSnapshotManagerAccessor>();
                         services.AddSingleton<TagHelperFactsService, DefaultTagHelperFactsService>();
                         services.AddSingleton<LSPTagHelperTooltipFactory, DefaultLSPTagHelperTooltipFactory>();
